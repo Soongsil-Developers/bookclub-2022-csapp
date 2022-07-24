@@ -10,13 +10,13 @@
  * Please fill in the following team struct 
  */
 team_t team = {
-    "bovik",              /* Team name */
+    "Soongsil-Developers",              /* Team name */
 
-    "Harry Q. Bovik",     /* First member full name */
-    "bovik@nowhere.edu",  /* First member email address */
+    "kkanggu",                          /* First member full name */
+    "rica742244@gmail.com",             /* First member email address */
 
-    "",                   /* Second member full name (leave blank if none) */
-    ""                    /* Second member email addr (leave blank if none) */
+    "",                                 /* Second member full name (leave blank if none) */
+    ""                                  /* Second member email addr (leave blank if none) */
 };
 
 /***************
@@ -28,16 +28,30 @@ team_t team = {
  ******************************************************/
 
 /* 
- * naive_rotate - The naive baseline version of rotate 
+ * naive_rotate - The naive baseline version of rotate
+ * Edit this to achieve better performance
  */
 char naive_rotate_descr[] = "naive_rotate: Naive baseline implementation";
 void naive_rotate(int dim, pixel *src, pixel *dst) 
 {
-    int i, j;
+//    int i, j;
+//
+//    for (i = 0; i < dim; i++)
+//	for (j = 0; j < dim; j++)
+//	    dst[RIDX(dim-1-j, i, dim)] = src[RIDX(i, j, dim)];
 
-    for (i = 0; i < dim; i++)
-	for (j = 0; j < dim; j++)
-	    dst[RIDX(dim-1-j, i, dim)] = src[RIDX(i, j, dim)];
+    int i , j , iTemp ;
+
+    for ( i = dim - 1 ; i >= 0 ; --i )
+    {
+        for ( j = 0 , iTemp = i ; j < dim ; )
+        {
+            * dst = src [ iTemp ] ;
+            iTemp += dim ;
+            ++ dst ;
+            ++j ;
+        }
+    }
 }
 
 /* 
@@ -144,16 +158,27 @@ static pixel avg(int dim, int i, int j, pixel *src)
  ******************************************************/
 
 /*
- * naive_smooth - The naive baseline version of smooth 
+ * naive_smooth - The naive baseline version of smooth
+ * Edit this to achieve better performance
  */
 char naive_smooth_descr[] = "naive_smooth: Naive baseline implementation";
 void naive_smooth(int dim, pixel *src, pixel *dst) 
 {
-    int i, j;
+//    int i, j;
+//
+//    for (i = 0; i < dim; i++)
+//	for (j = 0; j < dim; j++)
+//	    dst[RIDX(i, j, dim)] = avg(dim, i, j, src);
 
-    for (i = 0; i < dim; i++)
-	for (j = 0; j < dim; j++)
-	    dst[RIDX(i, j, dim)] = avg(dim, i, j, src);
+    int i , j ;
+
+    for ( i = 0 ; i < dim ; ++i )
+    {
+        for ( j = 0 ; j < dim ; ++j , ++ dst )
+        {
+            * dst = avg ( dim , i , j , src ) ;
+        }
+    }
 }
 
 /*
@@ -165,7 +190,6 @@ void smooth(int dim, pixel *src, pixel *dst)
 {
     naive_smooth(dim, src, dst);
 }
-
 
 /********************************************************************* 
  * register_smooth_functions - Register all of your different versions
