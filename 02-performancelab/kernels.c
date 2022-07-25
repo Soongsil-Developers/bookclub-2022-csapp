@@ -236,6 +236,7 @@ void smooth(int dim, pixel *src, pixel *dst)
         dst[tmp].blue = (src[tmp].blue + src[tmp - dim].blue + src[tmp - dim - 1].blue + src[tmp - 1].blue + src[tmp + 1].blue + src[tmp - dim + 1].blue) / 6;
     }
     
+    
     //나머지
     for (i = 1; i < dim - 1; i++)
 	    for (j = 1; j < dim - 1; j++){
