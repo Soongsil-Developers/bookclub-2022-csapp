@@ -24,9 +24,9 @@
  ********************************************************/
 team_t team = {
     /* Team name */
-    "noteam",
+    "SSU_csapp_bookclub_2022",
     /* First member's full name */
-    "KUR",
+    "Kim Yoonsu",
     /* First member's email address */
     "nope"
     /* Second member's full name (leave blank if none) */
@@ -35,6 +35,20 @@ team_t team = {
     ""
 };
 
+/* 그림 9.45 extend_heap 새 가용블록으로 힙 확장하기 */
+static void *extend_heap(size_t words){
+    char *bp;
+    size_t size;
+
+    size = (words %2) ? (words +1) * WSIZE : words * WSIZE;
+    if( (long)(bp = mem_sbrk(size)) == -1 )
+        return NULL;
+    PUT(HDRP(bp), PACK(size,0)); /* free block header */
+    PUT(FTRP(bp), PACK(size,0)); /* free block footer */
+    PUT(HDRP(NEXT_BLKP(bp)), PACK((0,1)));
+
+    return coalesced(bp);
+}
 
 /* 
  * mm_init - initialize the malloc package.
@@ -46,11 +60,19 @@ team_t team = {
  * 0    initialization succeeded.
  *
  */
+static char *heap_listp;
 int mm_init(void)
 {
-    if(mem_sbrk(WSIZE) == (void*)-1){
+    if((heap_listp = mem_sbrk(4*WSIZE)) == (void *)-1 )
         return -1;
-    }
+    PUT(heap_listp, 0);
+    PUT(heap_listp + (1*WSIZE), PACK(DSIZE,1));
+    PUT(heap_listp + (2*WSIZE), PACK(DSIZE,1));
+    PUT(heap_listp + (3*WSIZE), PACK(0,1));
+    heap_listp += (2*WSIZE);
+
+    if(extend_heap(CHUNKSIZE/WSIZE) == NULL)
+        return -1;
     return 0;
 }
 
@@ -87,9 +109,42 @@ void* mm_malloc(size_t size)
 
 /*
  * mm_free - Freeing a block.
+ * 그림 9.46 
  */
 void mm_free(void *ptr)
 {
+    size_t size = GET_SIZE(HDRP(bp));
+    PUT(HDRP(bp), PACK(size, 0));
+    PUT(FTRP(bp), PACK(size, 0));
+    coalesced(bp);
+}
+
+static void *coalesced(void *bp){
+    size_t prev_alloc = GET_ALLOC( FTRP(PREV_BLKP(bp)) );
+    size_t next_alloc = GET_ALLOC( HDRP(NEXT_BLKP(bp)) );
+    size_t size = GET_SIZE(HDRP(bp));
+
+    if(prev_alloc && next_alloc){ /* cast 1 */
+        return bp;
+    }
+    else if( prev_alloc && !next_alloc ){ /* case 2 */
+        size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
+        PUT(HDRP(bp), PACK(size,0));
+        PUT(FTRP(bp), PACK(size,0));
+    }
+    else if( !prev_alloc && next_alloc){ /* case 3 */
+        size += GET_SIZE(HDRP(PREV_BLKP(bp)));
+        PUT(FTRP(bp), PACK(size,0));
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size,0) );
+        bp = PREV_BLKP(bp);
+    }
+    else{ /* case 4 */
+        size += GET_SIZE(HDRP(PREV_BLKP(bp))) + GET_SIZE(FTRP(NEXT_BLKP(bp)));
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size,0));
+        PUT(FTRP(NEXT_BLKP(bp)), PACK(size,0));
+        bp = PREV_BLKP(bp);
+    }
+    return bp;
 }
 
 /*
