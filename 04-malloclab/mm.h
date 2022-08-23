@@ -6,13 +6,16 @@ extern void*    mm_malloc(size_t size);
 extern void     mm_free(void* ptr);
 extern void*    mm_realloc(void* ptr, size_t size);
 static void*    extend_heap(size_t words);
+static void*    coalesced(void *bp);
+static void*    find_fit(size_t asize);
 extern void     Mm_init(void);
 
 #define WSIZE       4
 #define DSIZE       8
 #define CHUNKSIZE (1<<12)
+#define REALLOC_BUFFER  (1<<7)  
 
-#define MAX(x,y) ( (x) > (y)? (x) : (y) )
+#define MAX(x,y) ( (x) > (y)? (x) : (y) );
 /* single word (4) or double word (8) alignment */
 #define ALIGNMENT   8
 
@@ -29,7 +32,7 @@ extern void     Mm_init(void);
 #define GET_SIZE(p)    (GET(p) & ~0x7)
 #define GET_ALLOC(p)    (GET(p) & 0x1) 
                      
-
+#define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
 /* Ginven block ptr bp, compute address of its header and footer*/
 #define HDRP(bp)        ((char*)(bp) - WSIZE)
 #define FTRP(bp) ((char*)(bp) + GET_SIZE(HDRP(bp)) - DSIZE)
